@@ -3,12 +3,15 @@ from bs4 import BeautifulSoup
 
 url = 'https://books.toscrape.com/catalogue/a-light-in-the-attic_1000/index.html'
 url_category_travel = 'https://books.toscrape.com/catalogue/category/books/travel_2/index.html'
+url_historical_fiction = 'https://books.toscrape.com/catalogue/category/books/historical-fiction_4/index.html'
 
 response_url = requests.get(url)
 response_url_category_travel = requests.get(url_category_travel)
+response_url_historical_fiction = requests.get(url_historical_fiction)
 
 print(response_url)
 print(response_url_category_travel)
+print(response_url_historical_fiction)
 
 
 def RetrieveAllBookInformation():
@@ -25,8 +28,8 @@ def RetrieveAllBookInformation():
     return book_info
 
 
-if response_url_category_travel.ok:
-    soup = BeautifulSoup(response_url_category_travel.text, "html.parser")
+if response_url_historical_fiction.ok:
+    soup = BeautifulSoup(response_url_historical_fiction.text, "html.parser")
     get_h3_list = soup.find('ol', 'row').find_all('h3')
     link_get = []
 
@@ -37,6 +40,23 @@ if response_url_category_travel.ok:
             link_get.append(new_book_url)
 
     print(link_get)
+    print(len(link_get))
+
+    if soup.find('li', class_='next').find('a').text is not None:
+        button_next = soup.find('li', class_='next').find('a')['href']
+        next_page_url = url_historical_fiction.replace("index.html", button_next)
+        response_next_page_url = requests.get(next_page_url)
+        if response_next_page_url.ok:
+            soup = BeautifulSoup(response_next_page_url.text, "html.parser")
+            get_h3_list = soup.find('ol', 'row').find_all('h3')
+            for h3 in get_h3_list:
+                book_url = h3.find('a', href=True)
+                if book_url is not None:
+                    new_book_url = book_url['href'].replace("../../../", "https://books.toscrape.com/catalogue/")
+                    link_get.append(new_book_url)
+
+    print(link_get)
+    print(len(link_get))
 
     all_books_info = []
 
@@ -47,3 +67,5 @@ if response_url_category_travel.ok:
             all_books_info.append(RetrieveAllBookInformation())
 
     print(all_books_info)
+    print(len(all_books_info))
+
