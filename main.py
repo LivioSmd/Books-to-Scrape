@@ -11,6 +11,20 @@ print(response_url)
 print(response_url_category_travel)
 
 
+def RetrieveAllBookInformation():
+    book_info = {}
+    book_info['title'] = soup.find('h1').text
+    book_info['universal_product_code'] = soup.find_all('tr')[0].findNext('td').text
+    book_info['price_including_tax'] = soup.find_all('tr')[2].findNext('td').text
+    book_info['price_excluding_tax'] = soup.find_all('tr')[3].findNext('td').text
+    book_info['number_available'] = soup.find_all('tr')[5].find('td').text
+    book_info['category'] = soup.find('ul', class_='breadcrumb').find_all('li')[2].text.strip()
+    book_info['product_descriptions'] = soup.find('article', class_='product_page').find_all('p')[3].text
+    book_info['image_url'] = soup.find('img').get('src').replace("../../", "https://books.toscrape.com/")
+    book_info['review_rating'] = soup.find('p', class_='star-rating').get('class')[1]
+    return book_info
+
+
 if response_url_category_travel.ok:
     soup = BeautifulSoup(response_url_category_travel.text, "html.parser")
     get_h3_list = soup.find('ol', 'row').find_all('h3')
@@ -24,38 +38,12 @@ if response_url_category_travel.ok:
 
     print(link_get)
 
+    all_books_info = []
+
     for link in link_get:
         response_url = requests.get(link)
         if response_url.ok:
             soup = BeautifulSoup(response_url.text, "html.parser")
-            title = soup.find('h1').text
-            print('Titre = ' + title)
+            all_books_info.append(RetrieveAllBookInformation())
 
-
-"""
-if response_url.ok:
-    soup = BeautifulSoup(response_url.text, "html.parser")
-    title = soup.find('h1').text
-    universal_product_code = soup.find_all('tr')[0].findNext('td').text
-    price_including_tax = soup.find_all('tr')[2].findNext('td').text
-    price_excluding_tax = soup.find_all('tr')[3].findNext('td').text
-    number_available = soup.find_all('tr')[5].find('td').text
-    category = soup.find('ul', class_='breadcrumb').find_all('li')[2].text.strip()
-    product_descriptions = soup.find('article', class_='product_page').find_all('p')[3].text
-    image_url = soup.find('img').get('src')
-    clean_image_url = image_url.replace("../../", "https://books.toscrape.com/")
-    review_rating = soup.find('p', class_='star-rating').get('class')[1]
-
-    print(
-        'url = ' + url, "\n" +
-        'Titre = ' + title, "\n" +
-        'Code produit = ' + universal_product_code, "\n" +
-        'Prix avec taxe = ' + price_including_tax, "\n" +
-        'Prix sans taxe = ' + price_excluding_tax, "\n" +
-        'Nombre disponible = ' + number_available, "\n" +
-        'Catégorie = ' + category + "\n" +
-        'Description = ' + product_descriptions, "\n" +
-        'Image source = ' + clean_image_url, "\n" +
-        'Note = ' + review_rating
-    )
-"""
+    print(all_books_info)
