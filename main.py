@@ -4,17 +4,22 @@ from bs4 import BeautifulSoup
 url = 'https://books.toscrape.com/catalogue/a-light-in-the-attic_1000/index.html'
 url_category_travel = 'https://books.toscrape.com/catalogue/category/books/travel_2/index.html'
 url_historical_fiction = 'https://books.toscrape.com/catalogue/category/books/historical-fiction_4/index.html'
+url_sequential_art = 'https://books.toscrape.com/catalogue/category/books/sequential-art_5/page-1.html'
 
 response_url = requests.get(url)
 response_url_category_travel = requests.get(url_category_travel)
 response_url_historical_fiction = requests.get(url_historical_fiction)
+response_url_sequential_art = requests.get(url_sequential_art)
+
 
 print(response_url)
 print(response_url_category_travel)
 print(response_url_historical_fiction)
+print(response_url_sequential_art)
 
-
-def RetrieveAllBookInformation():
+def RetrieveAllBookInformation(link):
+    response_url = requests.get(link)
+    soup = BeautifulSoup(response_url.text, "html.parser")
     book_info = {}
     book_info['title'] = soup.find('h1').text
     book_info['universal_product_code'] = soup.find_all('tr')[0].findNext('td').text
@@ -28,8 +33,8 @@ def RetrieveAllBookInformation():
     return book_info
 
 
-if response_url_historical_fiction.ok:
-    soup = BeautifulSoup(response_url_historical_fiction.text, "html.parser")
+if response_url_sequential_art.ok:
+    soup = BeautifulSoup(response_url_sequential_art.text, "html.parser")
     get_h3_list = soup.find('ol', 'row').find_all('h3')
     link_get = []
 
@@ -42,18 +47,26 @@ if response_url_historical_fiction.ok:
     print(link_get)
     print(len(link_get))
 
-    if soup.find('li', class_='next').find('a').text is not None:
+    while True:
+        print("1")
         button_next = soup.find('li', class_='next').find('a')['href']
-        next_page_url = url_historical_fiction.replace("index.html", button_next)
+        next_page_url = url_sequential_art.replace("index.html", button_next)
         response_next_page_url = requests.get(next_page_url)
         if response_next_page_url.ok:
+            print("2")
             soup = BeautifulSoup(response_next_page_url.text, "html.parser")
             get_h3_list = soup.find('ol', 'row').find_all('h3')
             for h3 in get_h3_list:
+                print("3")
                 book_url = h3.find('a', href=True)
                 if book_url is not None:
+                    print("4")
                     new_book_url = book_url['href'].replace("../../../", "https://books.toscrape.com/catalogue/")
                     link_get.append(new_book_url)
+        print(link_get)
+        print(len(link_get))
+    else:
+        print("no more book page")
 
     print(link_get)
     print(len(link_get))
@@ -61,10 +74,8 @@ if response_url_historical_fiction.ok:
     all_books_info = []
 
     for link in link_get:
-        response_url = requests.get(link)
         if response_url.ok:
-            soup = BeautifulSoup(response_url.text, "html.parser")
-            all_books_info.append(RetrieveAllBookInformation())
+            all_books_info.append(RetrieveAllBookInformation(link))
 
     print(all_books_info)
     print(len(all_books_info))
