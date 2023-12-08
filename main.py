@@ -1,41 +1,27 @@
 import requests
 from bs4 import BeautifulSoup
 
-url = 'https://books.toscrape.com/catalogue/a-light-in-the-attic_1000/index.html'
-url_category_travel = 'https://books.toscrape.com/catalogue/category/books/travel_2/index.html'
-url_historical_fiction = 'https://books.toscrape.com/catalogue/category/books/historical-fiction_4/index.html'
-url_sequential_art = 'https://books.toscrape.com/catalogue/category/books/sequential-art_5/index.html'
-
-response_url = requests.get(url)
-response_url_category_travel = requests.get(url_category_travel)
-response_url_historical_fiction = requests.get(url_historical_fiction)
-response_url_sequential_art = requests.get(url_sequential_art)
-
-print(response_url)
-print(response_url_category_travel)
-print(response_url_historical_fiction)
-print(response_url_sequential_art)
+url_home = 'https://books.toscrape.com/index.html'
 
 
 def RetrieveAllBookInformation(linkTarget):
     response_url = requests.get(linkTarget)
     soup = BeautifulSoup(response_url.text, "html.parser")
-    book_info = {}
-    book_info['title'] = soup.find('h1').text
-    book_info['universal_product_code'] = soup.find_all('tr')[0].findNext('td').text
-    book_info['price_including_tax'] = soup.find_all('tr')[2].findNext('td').text
-    book_info['price_excluding_tax'] = soup.find_all('tr')[3].findNext('td').text
-    book_info['number_available'] = soup.find_all('tr')[5].find('td').text
-    book_info['category'] = soup.find('ul', class_='breadcrumb').find_all('li')[2].text.strip()
-    book_info['product_descriptions'] = soup.find('article', class_='product_page').find_all('p')[3].text
-    book_info['image_url'] = soup.find('img').get('src').replace("../../", "https://books.toscrape.com/")
-    book_info['review_rating'] = soup.find('p', class_='star-rating').get('class')[1]
+    book_info = {'title': soup.find('h1').text, 'universal_product_code': soup.find_all('tr')[0].findNext('td').text,
+                 'price_including_tax': soup.find_all('tr')[2].findNext('td').text,
+                 'price_excluding_tax': soup.find_all('tr')[3].findNext('td').text,
+                 'number_available': soup.find_all('tr')[5].find('td').text,
+                 'category': soup.find('ul', class_='breadcrumb').find_all('li')[2].text.strip(),
+                 'product_descriptions': soup.find('article', class_='product_page').find_all('p')[3].text,
+                 'image_url': soup.find('img').get('src').replace("../../", "https://books.toscrape.com/"),
+                 'review_rating': soup.find('p', class_='star-rating').get('class')[1]}
     return book_info
 
 
-def ScrapeEveryBookPages(url, responseUrl):
-    if responseUrl.ok:
-        soup = BeautifulSoup(responseUrl.text, "html.parser")
+def ScrapeEveryBookPages(url):
+    response_url = requests.get(url)
+    if response_url.ok:
+        soup = BeautifulSoup(response_url.text, "html.parser")
         get_h3_list = soup.find('ol', 'row').find_all('h3')
         link_get = []
 
@@ -90,4 +76,29 @@ def ScrapeEveryBookPages(url, responseUrl):
         return all_books_info
 
 
-all_books_info = ScrapeEveryBookPages(url_category_travel, response_url_category_travel)
+def RetrieveAllBooksInfo(homeUrl):
+    response_url_home = requests.get(homeUrl)
+    print(response_url_home)
+    if response_url_home.ok:
+        soup = BeautifulSoup(response_url_home.text, "html.parser")
+        category_list = soup.find('ul', class_='nav nav-list').find('li').find('ul').find_all('li')
+        print(category_list)
+        print(len(category_list))
+        category_link = []
+        all_books = []
+
+        for category in category_list:
+            category_link.append(category.find('a')['href'].replace("catalogue/",
+                                                                    "https://books.toscrape.com/catalogue/"))
+        print(category_link)
+        print(len(category_link))
+
+        for link in category_link:
+            all_books = ScrapeEveryBookPages(link)
+        print(all_books)
+        print(len(all_books))
+        return all_books
+
+
+main_all_books = RetrieveAllBooksInfo(url_home)
+print(main_all_books)
