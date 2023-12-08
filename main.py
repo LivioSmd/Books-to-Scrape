@@ -11,14 +11,14 @@ response_url_category_travel = requests.get(url_category_travel)
 response_url_historical_fiction = requests.get(url_historical_fiction)
 response_url_sequential_art = requests.get(url_sequential_art)
 
-
 print(response_url)
 print(response_url_category_travel)
 print(response_url_historical_fiction)
 print(response_url_sequential_art)
 
-def RetrieveAllBookInformation(link):
-    response_url = requests.get(link)
+
+def RetrieveAllBookInformation(linkTarget):
+    response_url = requests.get(linkTarget)
     soup = BeautifulSoup(response_url.text, "html.parser")
     book_info = {}
     book_info['title'] = soup.find('h1').text
@@ -33,56 +33,61 @@ def RetrieveAllBookInformation(link):
     return book_info
 
 
-if response_url_sequential_art.ok:
-    soup = BeautifulSoup(response_url_sequential_art.text, "html.parser")
-    get_h3_list = soup.find('ol', 'row').find_all('h3')
-    link_get = []
+def ScrapeEveryBookPages(url, responseUrl):
+    if responseUrl.ok:
+        soup = BeautifulSoup(responseUrl.text, "html.parser")
+        get_h3_list = soup.find('ol', 'row').find_all('h3')
+        link_get = []
 
-    for h3 in get_h3_list:
-        book_url = h3.find('a', href=True)
-        if book_url is not None:
-            new_book_url = book_url['href'].replace("../../../", "https://books.toscrape.com/catalogue/")
-            link_get.append(new_book_url)
+        for h3 in get_h3_list:
+            book_url = h3.find('a', href=True)
+            if book_url is not None:
+                new_book_url = book_url['href'].replace("../../../", "https://books.toscrape.com/catalogue/")
+                link_get.append(new_book_url)
 
-    print(link_get)
-    print(len(link_get))
+        print(link_get)
+        print(len(link_get))
 
-    while True:
-        next_button = soup.find('li', class_='next')
-        if next_button is not None:
-            button_href = next_button.find('a')['href']
-            if button_href is not None:
-                next_page_url = url_sequential_art.replace("index.html", button_href)
-                response_next_page_url = requests.get(next_page_url)
-                if response_next_page_url.ok:
-                    soup = BeautifulSoup(response_next_page_url.text, "html.parser")
-                    get_h3_list = soup.find('ol', 'row').find_all('h3')
-                    for h3 in get_h3_list:
-                        book_url = h3.find('a', href=True)
-                        if book_url is not None:
-                            new_book_url = book_url['href'].replace("../../../", "https://books.toscrape.com/catalogue/")
-                            link_get.append(new_book_url)
-                    print(link_get)
-                    print(len(link_get))
+        while True:
+            next_button = soup.find('li', class_='next')
+            if next_button is not None:
+                button_href = next_button.find('a')['href']
+                if button_href is not None:
+                    next_page_url = url.replace("index.html", button_href)
+                    response_next_page_url = requests.get(next_page_url)
+                    if response_next_page_url.ok:
+                        soup = BeautifulSoup(response_next_page_url.text, "html.parser")
+                        get_h3_list = soup.find('ol', 'row').find_all('h3')
+                        for h3 in get_h3_list:
+                            book_url = h3.find('a', href=True)
+                            if book_url is not None:
+                                new_book_url = book_url['href'].replace("../../../",
+                                                                        "https://books.toscrape.com/catalogue/")
+                                link_get.append(new_book_url)
+                        print(link_get)
+                        print(len(link_get))
+                    else:
+                        print("no more book page")
+                        break  # Sortir du while si il n'y a pas de page suivante (ok = no)
                 else:
                     print("no more book page")
-                    break  # Sortir du while si il n'y a pas de page suivante (ok = no)
+                    break  # Sortir du while si le bouton 'next' n'a pas d'attribut 'href' (button_href = is none)
             else:
                 print("no more book page")
-                break  # Sortir du while si le bouton 'next' n'a pas d'attribut 'href' (button_href = is none)
-        else:
-            print("no more book page")
-            break  # Sortir du while si le bouton 'next' n'est pas trouvé (next_button = is none)
+                break  # Sortir du while si le bouton 'next' n'est pas trouvé (next_button = is none)
 
-    print(link_get)
-    print(len(link_get))
+        print(link_get)
+        print(len(link_get))
 
-    all_books_info = []
+        all_books_info = []
 
-    for link in link_get:
-        if response_url.ok:
-            all_books_info.append(RetrieveAllBookInformation(link))
+        for link in link_get:
+            if response_url.ok:
+                all_books_info.append(RetrieveAllBookInformation(link))
 
-    print(all_books_info)
-    print(len(all_books_info))
+        print(all_books_info)
+        print(len(all_books_info))
+        return all_books_info
 
+
+all_books_info = ScrapeEveryBookPages(url_category_travel, response_url_category_travel)
