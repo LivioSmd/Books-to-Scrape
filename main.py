@@ -4,7 +4,7 @@ from bs4 import BeautifulSoup
 url = 'https://books.toscrape.com/catalogue/a-light-in-the-attic_1000/index.html'
 url_category_travel = 'https://books.toscrape.com/catalogue/category/books/travel_2/index.html'
 url_historical_fiction = 'https://books.toscrape.com/catalogue/category/books/historical-fiction_4/index.html'
-url_sequential_art = 'https://books.toscrape.com/catalogue/category/books/sequential-art_5/page-1.html'
+url_sequential_art = 'https://books.toscrape.com/catalogue/category/books/sequential-art_5/index.html'
 
 response_url = requests.get(url)
 response_url_category_travel = requests.get(url_category_travel)
@@ -48,25 +48,31 @@ if response_url_sequential_art.ok:
     print(len(link_get))
 
     while True:
-        print("1")
-        button_next = soup.find('li', class_='next').find('a')['href']
-        next_page_url = url_sequential_art.replace("index.html", button_next)
-        response_next_page_url = requests.get(next_page_url)
-        if response_next_page_url.ok:
-            print("2")
-            soup = BeautifulSoup(response_next_page_url.text, "html.parser")
-            get_h3_list = soup.find('ol', 'row').find_all('h3')
-            for h3 in get_h3_list:
-                print("3")
-                book_url = h3.find('a', href=True)
-                if book_url is not None:
-                    print("4")
-                    new_book_url = book_url['href'].replace("../../../", "https://books.toscrape.com/catalogue/")
-                    link_get.append(new_book_url)
-        print(link_get)
-        print(len(link_get))
-    else:
-        print("no more book page")
+        next_button = soup.find('li', class_='next')
+        if next_button is not None:
+            button_href = next_button.find('a')['href']
+            if button_href is not None:
+                next_page_url = url_sequential_art.replace("index.html", button_href)
+                response_next_page_url = requests.get(next_page_url)
+                if response_next_page_url.ok:
+                    soup = BeautifulSoup(response_next_page_url.text, "html.parser")
+                    get_h3_list = soup.find('ol', 'row').find_all('h3')
+                    for h3 in get_h3_list:
+                        book_url = h3.find('a', href=True)
+                        if book_url is not None:
+                            new_book_url = book_url['href'].replace("../../../", "https://books.toscrape.com/catalogue/")
+                            link_get.append(new_book_url)
+                    print(link_get)
+                    print(len(link_get))
+                else:
+                    print("no more book page")
+                    break  # Sortir du while si il n'y a pas de page suivante (ok = no)
+            else:
+                print("no more book page")
+                break  # Sortir du while si le bouton 'next' n'a pas d'attribut 'href' (button_href = is none)
+        else:
+            print("no more book page")
+            break  # Sortir du while si le bouton 'next' n'est pas trouvé (next_button = is none)
 
     print(link_get)
     print(len(link_get))
