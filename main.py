@@ -1,7 +1,6 @@
 import requests
+import csv
 from bs4 import BeautifulSoup
-
-url_home = 'https://books.toscrape.com/index.html'
 
 
 def RetrieveAllBookInformation(linkTarget):
@@ -100,5 +99,24 @@ def RetrieveAllBooksInfo(homeUrl):
         return all_books
 
 
-main_all_books = RetrieveAllBooksInfo(url_home)
-print(main_all_books)
+def main():
+    url_home = 'https://books.toscrape.com/index.html'
+
+    all_books_info = RetrieveAllBooksInfo(url_home)
+    print('test 1 :', all_books_info)
+
+    csv_file = 'all_books.csv'
+    columns = ['title', 'universal_product_code', 'price_including_tax', 'price_excluding_tax',
+               'number_available', 'category', 'product_descriptions', 'image_url', 'review_rating']
+
+    with open(csv_file, mode='w', newline='', encoding='utf-8') as f:
+        writer = csv.DictWriter(f, fieldnames=columns)
+        writer.writeheader()
+
+        for book in all_books_info:
+            writer.writerow(book)
+            print('test 3 :', book)
+
+
+main()
+print(main)
