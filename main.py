@@ -103,7 +103,6 @@ def main():
     url_home = 'https://books.toscrape.com/index.html'
 
     all_books_info = RetrieveAllBooksInfo(url_home)
-    print('test 1 :', all_books_info)
 
     csv_file = 'all_books.csv'
     columns = ['title', 'universal_product_code', 'price_including_tax', 'price_excluding_tax',
@@ -115,7 +114,6 @@ def main():
 
         for book in all_books_info:
             writer.writerow(book)
-            print('test 3 :', book)
 
 
 main()
