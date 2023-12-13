@@ -93,7 +93,8 @@ def RetrieveAllBooksInfo(homeUrl):
         print(len(category_link))
 
         for link in category_link:
-            all_books = ScrapeEveryBookPages(link)
+            books_in_category = ScrapeEveryBookPages(link)
+            all_books.extend(books_in_category)
         print(all_books)
         print(len(all_books))
         return all_books
