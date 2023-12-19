@@ -1,6 +1,7 @@
-import requests
 import csv
+import requests
 from bs4 import BeautifulSoup
+import os
 
 
 def RetrieveAllBookInformation(linkTarget):
@@ -14,6 +15,7 @@ def RetrieveAllBookInformation(linkTarget):
                  'product_descriptions': soup.find('article', class_='product_page').find_all('p')[3].text,
                  'image_url': soup.find('img').get('src').replace("../../", "https://books.toscrape.com/"),
                  'review_rating': soup.find('p', class_='star-rating').get('class')[1]}
+
     return book_info
 
 
@@ -85,6 +87,8 @@ def RetrieveAllBooksInfo(homeUrl):
         print(len(category_list))
         category_link = []
         all_books = []
+        image_folder = 'Images'
+        os.makedirs(image_folder)
 
         for category in category_list:
             category_link.append(category.find('a')['href'].replace("catalogue/",
@@ -92,9 +96,33 @@ def RetrieveAllBooksInfo(homeUrl):
         print(category_link)
         print(len(category_link))
 
-        for link in category_link:
-            books_in_category = ScrapeEveryBookPages(link)
-            all_books.extend(books_in_category)
+        for category in category_list:
+            category_link = category.find('a')['href'].replace("catalogue/", "https://books.toscrape.com/catalogue/")
+            category_name = category.find('a').text.strip().replace(' ', '_')  # Extraction du nom de la catégorie
+
+            books_in_category = ScrapeEveryBookPages(category_link)
+            csv_file_category = f'{category_name}_books.csv'  # Utilisation du nom de la catégorie pour le fichier CSV
+            columns = ['title', 'universal_product_code', 'price_including_tax', 'price_excluding_tax',
+                       'number_available', 'category', 'product_descriptions', 'image_url', 'review_rating']
+
+            with open(csv_file_category, mode='w', newline='', encoding='utf-8') as f:
+                writer = csv.DictWriter(f, fieldnames=columns)
+                writer.writeheader()
+                for book in books_in_category:
+                    writer.writerow(book)
+
+            for book in books_in_category:
+                image_url = book['image_url']
+                image_name = book['title'].replace(' ', '_') + '.jpg'
+                image_path = os.path.join(image_folder, image_name)
+                # Téléchargement de l'image
+                response = requests.get(image_url)
+                if response.ok:
+                    with open(image_path, 'wb') as f:
+                        f.write(response.content)
+                    print(f"L'image a été téléchargée sous le nom '{image_name}'")
+                else:
+                    print("Échec du téléchargement")
         print(all_books)
         print(len(all_books))
         return all_books
@@ -104,18 +132,7 @@ def main():
     url_home = 'https://books.toscrape.com/index.html'
 
     all_books_info = RetrieveAllBooksInfo(url_home)
+    print(all_books_info)
 
-    csv_file = 'all_books.csv'
-    columns = ['title', 'universal_product_code', 'price_including_tax', 'price_excluding_tax',
-               'number_available', 'category', 'product_descriptions', 'image_url', 'review_rating']
-
-    with open(csv_file, mode='w', newline='', encoding='utf-8') as f:
-        writer = csv.DictWriter(f, fieldnames=columns)
-        writer.writeheader()
-
-        for book in all_books_info:
-            writer.writerow(book)
-
-
-main()
-print(main)
+if __name__ == "__main__":
+    main()
