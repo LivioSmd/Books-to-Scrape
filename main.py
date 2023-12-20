@@ -85,23 +85,16 @@ def RetrieveAllBooksInfo(homeUrl):
         category_list = soup.find('ul', class_='nav nav-list').find('li').find('ul').find_all('li')
         print(category_list)
         print(len(category_list))
-        category_link = []
         all_books = []
         image_folder = 'Images'
         os.makedirs(image_folder)
 
         for category in category_list:
-            category_link.append(category.find('a')['href'].replace("catalogue/",
-                                                                    "https://books.toscrape.com/catalogue/"))
-        print(category_link)
-        print(len(category_link))
-
-        for category in category_list:
             category_link = category.find('a')['href'].replace("catalogue/", "https://books.toscrape.com/catalogue/")
-            category_name = category.find('a').text.strip().replace(' ', '_')  # Extraction du nom de la catégorie
+            category_name = category.find('a').text.strip().replace(' ', '_')  # récup nom de la catégorie
 
             books_in_category = ScrapeEveryBookPages(category_link)
-            csv_file_category = f'{category_name}_books.csv'  # Utilisation du nom de la catégorie pour le fichier CSV
+            csv_file_category = f'{category_name}_books.csv'  # recup nom de la catégorie pour le CSV
             columns = ['title', 'universal_product_code', 'price_including_tax', 'price_excluding_tax',
                        'number_available', 'category', 'product_descriptions', 'image_url', 'review_rating']
 
@@ -114,8 +107,7 @@ def RetrieveAllBooksInfo(homeUrl):
             for book in books_in_category:
                 image_url = book['image_url']
                 image_name = book['title'].replace(' ', '_') + '.jpg'
-                image_path = os.path.join(image_folder, image_name)
-                # Téléchargement de l'image
+                image_path = os.path.join(image_folder, image_name)  # mettre image dans dossier
                 response = requests.get(image_url)
                 if response.ok:
                     with open(image_path, 'wb') as f:
