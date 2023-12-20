@@ -103,20 +103,18 @@ def RetrieveAllBooksInfo(homeUrl):
                 writer.writeheader()
                 for book in books_in_category:
                     writer.writerow(book)
-
-            for book in books_in_category:
-                image_url = book['image_url']
-                image_name = book['title'].replace(' ', '_') + '.jpg'
-                image_path = os.path.join(image_folder, image_name)  # mettre image dans dossier
-                response = requests.get(image_url)
-                if response.ok:
-                    with open(image_path, 'wb') as f:
-                        f.write(response.content)
-                    print(f"L'image a été téléchargée sous le nom '{image_name}'")
-                else:
-                    print("Échec du téléchargement")
-        print(all_books)
-        print(len(all_books))
+                    image_url = book['image_url']
+                    image_name = book['title'].replace(' ', '_') + '.jpg'
+                    image_path = os.path.join(image_folder, image_name)  # mettre image dans dossier
+                    response = requests.get(image_url)
+                    if response.ok:
+                        with open(image_path, 'wb') as i:
+                            i.write(response.content)
+                        print(f"L'image a été téléchargée sous le nom '{image_name}'")
+                    else:
+                        print("Échec du téléchargement")
+            print(all_books)
+            print(len(all_books))
         return all_books
 
 
