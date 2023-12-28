@@ -80,6 +80,7 @@ def ScrapeEveryBookPages(url):
 def RetrieveAllBooksInfo(homeUrl):
     response_url_home = requests.get(homeUrl)
     print(response_url_home)
+
     if response_url_home.ok:
         soup = BeautifulSoup(response_url_home.text, "html.parser")
         category_list = soup.find('ul', class_='nav nav-list').find('li').find('ul').find_all('li')
@@ -87,34 +88,46 @@ def RetrieveAllBooksInfo(homeUrl):
         print(len(category_list))
         all_books = []
         image_folder = 'Images'
+        csv_folder = 'Csv'
         os.makedirs(image_folder)
+        os.makedirs(csv_folder)
+
+        print(os.getcwd())
 
         for category in category_list:
             category_link = category.find('a')['href'].replace("catalogue/", "https://books.toscrape.com/catalogue/")
-            category_name = category.find('a').text.strip().replace(' ', '_')  # récup nom de la catégorie
+            category_name = category.find('a').text.strip().replace(' ', '_')  # récupère le nom de la catégorie
 
             books_in_category = ScrapeEveryBookPages(category_link)
-            csv_file_category = f'{category_name}_books.csv'  # recup nom de la catégorie pour le CSV
+            csv_file_category = f'{category_name}_books.csv'  # récupère le nom de la catégorie pour le CSV
             columns = ['title', 'universal_product_code', 'price_including_tax', 'price_excluding_tax',
                        'number_available', 'category', 'product_descriptions', 'image_url', 'review_rating']
 
-            with open(csv_file_category, mode='w', newline='', encoding='utf-8') as f:
+            csv_path = os.path.join(csv_folder, csv_file_category)
+
+            csv_file_category_for_img = f'{category_name}_books'
+
+            print(os.getcwd())
+
+            with open(csv_path, mode='w', newline='', encoding='utf-8') as f:
                 writer = csv.DictWriter(f, fieldnames=columns)
                 writer.writeheader()
+                os.chdir(image_folder)
+                os.makedirs(csv_file_category_for_img)
+                print(os.getcwd())
                 for book in books_in_category:
                     writer.writerow(book)
                     image_url = book['image_url']
                     image_name = book['title'].replace(' ', '_') + '.jpg'
-                    image_path = os.path.join(image_folder, image_name)  # mettre image dans dossier
                     response = requests.get(image_url)
+                    image_write = os.path.join(csv_file_category_for_img, image_name)
+                    print(os.getcwd())
                     if response.ok:
-                        with open(image_path, 'wb') as i:
+                        print(os.getcwd())
+                        with open(image_write, 'wb') as i:
                             i.write(response.content)
-                        print(f"L'image a été téléchargée sous le nom '{image_name}'")
-                    else:
-                        print("Échec du téléchargement")
-            print(all_books)
-            print(len(all_books))
+                            print(os.getcwd())
+            os.chdir('..')
         return all_books
 
 
