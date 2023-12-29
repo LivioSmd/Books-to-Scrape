@@ -57,8 +57,7 @@ def ScrapeEveryBookPages(url):
         all_books_info = []
 
         for link in link_get:
-            if response_url.ok:
-                all_books_info.append(RetrieveAllBookInformation(link))
+            all_books_info.append(RetrieveAllBookInformation(link))
 
         return all_books_info
 
@@ -66,7 +65,7 @@ def ScrapeEveryBookPages(url):
 def clean_filename(filename):
     special_chars = ['<', '>', ':', '"', '/', '\\', '|', '?', '*']
     for char in special_chars:
-        filename = filename.replace(char, '_')  # Remplacer les caractères spéciaux par des underscores
+        filename = filename.replace(char, '_')
     return filename
 
 
@@ -96,8 +95,8 @@ def RetrieveAllBooksInfo(homeUrl):
                     writer.writerow(book)
                     image_url = book['image_url']
                     image_name = clean_filename(
-                        book['title']) + '.jpg'  # Utiliser une fonction pour nettoyer le nom du fichier
-                    image_path = os.path.join(image_folder, image_name)  # Créer le chemin d'accès du fichier image
+                        book['title']) + '.jpg'
+                    image_path = os.path.join(image_folder, image_name)
                     response = requests.get(image_url)
                     if response.ok:
                         with open(image_path, 'wb') as i:
