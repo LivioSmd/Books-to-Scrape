@@ -32,9 +32,6 @@ def ScrapeEveryBookPages(url):
                 new_book_url = book_url['href'].replace("../../../", "https://books.toscrape.com/catalogue/")
                 link_get.append(new_book_url)
 
-        print(link_get)
-        print(len(link_get))
-
         while True:
             next_button = soup.find('li', class_='next')
             if next_button is not None:
@@ -51,41 +48,33 @@ def ScrapeEveryBookPages(url):
                                 new_book_url = book_url['href'].replace("../../../",
                                                                         "https://books.toscrape.com/catalogue/")
                                 link_get.append(new_book_url)
-                        print(link_get)
-                        print(len(link_get))
                     else:
-                        print("no more book page")
                         break  # Sortir du while si il n'y a pas de page suivante (ok = no)
                 else:
-                    print("no more book page")
                     break  # Sortir du while si le bouton 'next' n'a pas d'attribut 'href' (button_href = is none)
             else:
-                print("no more book page")
                 break  # Sortir du while si le bouton 'next' n'est pas trouvé (next_button = is none)
-
-        print(link_get)
-        print(len(link_get))
-
         all_books_info = []
 
         for link in link_get:
             if response_url.ok:
                 all_books_info.append(RetrieveAllBookInformation(link))
 
-        print(all_books_info)
-        print(len(all_books_info))
         return all_books_info
+
+
+def clean_filename(filename):
+    special_chars = ['<', '>', ':', '"', '/', '\\', '|', '?', '*']
+    for char in special_chars:
+        filename = filename.replace(char, '_')  # Remplacer les caractères spéciaux par des underscores
+    return filename
 
 
 def RetrieveAllBooksInfo(homeUrl):
     response_url_home = requests.get(homeUrl)
-    print(response_url_home)
     if response_url_home.ok:
         soup = BeautifulSoup(response_url_home.text, "html.parser")
         category_list = soup.find('ul', class_='nav nav-list').find('li').find('ul').find_all('li')
-        print(category_list)
-        print(len(category_list))
-        all_books = []
         image_folder = 'Images'
         csv_folder = 'Csv'
         os.makedirs(image_folder)
@@ -106,25 +95,19 @@ def RetrieveAllBooksInfo(homeUrl):
                 for book in books_in_category:
                     writer.writerow(book)
                     image_url = book['image_url']
-                    image_name = book['title'].replace(' ', '_') + '.jpg'
-                    image_path = os.path.join(image_folder, image_name)  # mettre image dans dossier
+                    image_name = clean_filename(
+                        book['title']) + '.jpg'  # Utiliser une fonction pour nettoyer le nom du fichier
+                    image_path = os.path.join(image_folder, image_name)  # Créer le chemin d'accès du fichier image
                     response = requests.get(image_url)
                     if response.ok:
                         with open(image_path, 'wb') as i:
                             i.write(response.content)
-                        print(f"L'image a été téléchargée sous le nom '{image_name}'")
-                    else:
-                        print("Échec du téléchargement")
-            print(all_books)
-            print(len(all_books))
-        return all_books
 
 
 def main():
     url_home = 'https://books.toscrape.com/index.html'
+    RetrieveAllBooksInfo(url_home)
 
-    all_books_info = RetrieveAllBooksInfo(url_home)
-    print(all_books_info)
 
 if __name__ == "__main__":
     main()
