@@ -72,17 +72,30 @@ def clean_filename(filename):
 def RetrieveAllBooksInfo(homeUrl):
     response_url_home = requests.get(homeUrl)
     if response_url_home.ok:
+        print(f'Connexion avec le site réussite, {response_url_home}')
         soup = BeautifulSoup(response_url_home.text, "html.parser")
         category_list = soup.find('ul', class_='nav nav-list').find('li').find('ul').find_all('li')
         image_folder = 'Images'
         csv_folder = 'Csv'
-        os.makedirs(image_folder)
-        os.makedirs(csv_folder)
+
+        if os.path.exists(image_folder):
+            print('Erreur : Le dossier Images existe déjà.')
+        else:
+            os.makedirs(image_folder)
+            print('Création du dossier Images = ok')
+
+        if os.path.exists(csv_folder):
+            print('Erreur : Le dossier Csv existe déjà.')
+        else:
+            os.makedirs(csv_folder)
+            print('Création du dossier Csv = ok')
 
         for category in category_list:
             category_link = category.find('a')['href'].replace("catalogue/", "https://books.toscrape.com/catalogue/")
             category_name = category.find('a').text.strip().replace(' ', '_')  # récup nom de la catégorie
+            print(f'Récupération des livres de la catégorie {category_name}, Patienter...')
             books_in_category = ScrapeEveryBookPages(category_link)
+            print('Réussite !')
             csv_file_category = f'{category_name}_books.csv'  # recup nom de la catégorie pour le CSV
             columns = ['title', 'universal_product_code', 'price_including_tax', 'price_excluding_tax',
                        'number_available', 'category', 'product_descriptions', 'image_url', 'review_rating']
@@ -91,6 +104,7 @@ def RetrieveAllBooksInfo(homeUrl):
             with open(csv_path, mode='w', newline='', encoding='utf-8') as f:
                 writer = csv.DictWriter(f, fieldnames=columns)
                 writer.writeheader()
+                print('Création du ficher Csv pour et récupération des images cette catégorie, Patienter...')
                 for book in books_in_category:
                     writer.writerow(book)
                     image_url = book['image_url']
@@ -101,6 +115,8 @@ def RetrieveAllBooksInfo(homeUrl):
                     if response.ok:
                         with open(image_path, 'wb') as i:
                             i.write(response.content)
+                print('Ficher Csv crée !')
+                print('Images récupérées !')
 
 
 def main():
